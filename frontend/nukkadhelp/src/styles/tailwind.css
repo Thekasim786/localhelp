@@ -1,0 +1,131 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Core Colors - Enhanced with vibrant palette */
+    --color-background: #FAFBFF; /* Very light blue-white */
+    --color-foreground: #1A1B4B; /* Deep navy blue */
+    --color-border: #E0E7FF; /* Light purple-blue */
+    --color-input: #FFFFFF; /* white */
+    --color-ring: #6366F1; /* Indigo-500 */
+    
+    /* Card Colors */
+    --color-card: #FFFFFF; /* white */
+    --color-card-foreground: #1A1B4B; /* Deep navy blue */
+    
+    /* Popover Colors */
+    --color-popover: #FFFFFF; /* white */
+    --color-popover-foreground: #1A1B4B; /* Deep navy blue */
+    
+    /* Muted Colors */
+    --color-muted: #F1F5F9; /* slate-100 */
+    --color-muted-foreground: #64748B; /* slate-500 */
+    
+    /* Primary Colors - Vibrant Indigo */
+    --color-primary: #6366F1; /* indigo-500 */
+    --color-primary-foreground: #FFFFFF; /* white */
+    
+    /* Secondary Colors - Purple */
+    --color-secondary: #8B5CF6; /* violet-500 */
+    --color-secondary-foreground: #FFFFFF; /* white */
+    
+    /* Destructive Colors - Enhanced Red */
+    --color-destructive: #EF4444; /* red-500 */
+    --color-destructive-foreground: #FFFFFF; /* white */
+    
+    /* Accent Colors - Bright Orange */
+    --color-accent: #F97316; /* orange-500 */
+    --color-accent-foreground: #FFFFFF; /* white */
+    
+    /* Success Colors - Emerald Green */
+    --color-success: #10B981; /* emerald-500 */
+    --color-success-foreground: #FFFFFF; /* white */
+    
+    /* Warning Colors - Yellow */
+    --color-warning: #F59E0B; /* amber-500 */
+    --color-warning-foreground: #FFFFFF; /* white */
+    
+    /* Error Colors */
+    --color-error: #EF4444; /* red-500 */
+    --color-error-foreground: #FFFFFF; /* white */
+    
+    /* New Vibrant Colors */
+    --color-pink: #EC4899; /* pink-500 */
+    --color-cyan: #06B6D4; /* cyan-500 */
+    --color-lime: #84CC16; /* lime-500 */
+    --color-rose: #F43F5E; /* rose-500 */
+    --color-teal: #14B8A6; /* teal-500 */
+    --color-purple: #A855F7; /* purple-500 */
+  }
+
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', sans-serif;
+  }
+  
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer components {
+  .shadow-card {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  .shadow-modal {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+  
+  .shadow-glow {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  }
+  
+  .transition-micro {
+    transition: all 150ms ease-out;
+  }
+  
+  .transition-modal {
+    transition: all 300ms ease-in-out;
+  }
+  
+  .scale-hover {
+    transform: scale(1.02);
+  }
+
+  .gradient-primary {
+    background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+  }
+
+  .gradient-secondary {
+    background: linear-gradient(135deg, #EC4899 0%, #F97316 100%);
+  }
+
+  .gradient-accent {
+    background: linear-gradient(135deg, #10B981 0%, #06B6D4 100%);
+  }
+
+  .gradient-warm {
+    background: linear-gradient(135deg, #F97316 0%, #F43F5E 100%);
+  }
+
+  .gradient-cool {
+    background: linear-gradient(135deg, #06B6D4 0%, #8B5CF6 100%);
+  }
+
+  .gradient-nature {
+    background: linear-gradient(135deg, #84CC16 0%, #14B8A6 100%);
+  }
+}
