@@ -351,19 +351,106 @@ const SignupForm = ({ userRole }) => {
 export default SignupForm;
 */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Input from "../../../components/ui/Input";
 import Button from "../../../components/ui/Button";
 import Select from "../../../components/ui/Select";
 import { Checkbox } from "../../../components/ui/Checkbox";
-import RoleToggle from "./RoleToggle"; // ✅ Make sure path is correct
+import { CheckCircle2, AlertCircle, X } from "lucide-react";
+
+// Beautiful Toast Component with Animation
+const Toast = ({ message, type, onClose }) => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // Trigger animation
+    setTimeout(() => setIsVisible(true), 10);
+  }, []);
+
+  const handleClose = () => {
+    setIsVisible(false);
+    setTimeout(onClose, 300);
+  };
+
+  const styles = {
+    success: {
+      gradient: "from-emerald-500 to-teal-600",
+      iconBg: "bg-white/20",
+      icon: <CheckCircle2 className="w-5 h-5" />,
+    },
+    error: {
+      gradient: "from-rose-500 to-pink-600",
+      iconBg: "bg-white/20",
+      icon: <AlertCircle className="w-5 h-5" />,
+    },
+  };
+
+  const currentStyle = styles[type];
+
+  return (
+    <div
+      className={`fixed top-20 right-6 z-[9999] transition-all duration-300 transform ${
+        isVisible ? "translate-x-0 opacity-100" : "translate-x-[400px] opacity-0"
+      }`}
+      style={{ maxWidth: "400px" }}
+    >
+      <div
+        className={`bg-gradient-to-r ${currentStyle.gradient} text-white rounded-2xl shadow-2xl overflow-hidden`}
+      >
+        <div className="px-5 py-4 flex items-start gap-4">
+          {/* Icon */}
+          <div className={`${currentStyle.iconBg} rounded-full p-2 flex-shrink-0`}>
+            {currentStyle.icon}
+          </div>
+
+          {/* Message */}
+          <div className="flex-1 pt-1">
+            <p className="text-sm font-medium leading-relaxed">{message}</p>
+          </div>
+
+          {/* Close Button */}
+          <button
+            onClick={handleClose}
+            className="flex-shrink-0 hover:bg-white/20 rounded-lg p-1.5 transition-colors duration-200"
+            aria-label="Close notification"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="h-1 bg-white/20">
+          <div
+            className="h-full bg-white/40 animate-[shrink_5s_linear]"
+            style={{
+              animation: "shrink 5s linear forwards",
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Add keyframes for progress bar animation
+const style = document.createElement("style");
+style.textContent = `
+  @keyframes shrink {
+    from { width: 100%; }
+    to { width: 0%; }
+  }
+`;
+if (!document.querySelector('style[data-toast-animations]')) {
+  style.setAttribute('data-toast-animations', 'true');
+  document.head.appendChild(style);
+}
 
 const SignupForm = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    role: "customer", // ✅ Default role
+    role: "customer",
     firstName: "",
     lastName: "",
     email: "",
@@ -379,6 +466,7 @@ const SignupForm = () => {
 
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState(null);
 
   const serviceOptions = [
     { value: "electrician", label: "Electrician" },
@@ -398,7 +486,12 @@ const SignupForm = () => {
     { value: "10+", label: "10+ years" },
   ];
 
-  // ✅ Input handling
+  // Show toast notification
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 5000);
+  };
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -417,7 +510,6 @@ const SignupForm = () => {
     setFormData((prev) => ({ ...prev, role }));
   };
 
-  // ✅ Form validation
   const validateForm = () => {
     const newErrors = {};
     if (!formData.firstName.trim()) newErrors.firstName = "First name is required";
@@ -449,12 +541,12 @@ const SignupForm = () => {
     return newErrors;
   };
 
-  // ✅ Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = validateForm();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      showToast("Please fix the errors in the form", "error");
       return;
     }
 
@@ -495,12 +587,16 @@ const SignupForm = () => {
 
       const data = await response.json();
       if (!response.ok) {
-        setErrors({ apiError: data.message || "Signup failed" });
+        showToast(data.message || "Signup failed. Please try again.", "error");
         setIsLoading(false);
         return;
       }
 
-      alert(`${formData.role === "provider" ? "Provider" : "Customer"} signup successful!`);
+      showToast(
+        `🎉 Welcome aboard! Your ${formData.role === "provider" ? "provider" : "customer"} account has been created successfully.`,
+        "success"
+      );
+
       localStorage.setItem(
         "user",
         JSON.stringify({
@@ -510,150 +606,154 @@ const SignupForm = () => {
         })
       );
 
-      navigate(
-        formData.role === "customer"
-          ? "/customer-dashboard"
-          : "/service-provider-profile"
-      );
+      setTimeout(() => {
+        navigate(
+          formData.role === "customer"
+            ? "/customer-dashboard"
+            : "/service-provider-profile"
+        );
+      }, 1500);
     } catch (error) {
       console.error("❌ Signup error:", error);
-      setErrors({ apiError: "Something went wrong. Please try again later." });
+      showToast("Something went wrong. Please try again later.", "error");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {errors.apiError && (
-        <div className="p-3 bg-error/10 border border-error/20 rounded-md">
-          <p className="text-sm text-error">{errors.apiError}</p>
-        </div>
+    <>
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
 
-      
-
-      {/* 🟢 Basic Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input
-          label="First Name"
-          name="firstName"
-          value={formData.firstName}
-          onChange={handleInputChange}
-          error={errors.firstName}
-          required
-        />
-        <Input
-          label="Last Name"
-          name="lastName"
-          value={formData.lastName}
-          onChange={handleInputChange}
-          error={errors.lastName}
-          required
-        />
-      </div>
-
-      <Input
-        label="Email Address"
-        type="email"
-        name="email"
-        value={formData.email}
-        onChange={handleInputChange}
-        error={errors.email}
-        required
-      />
-
-      <Input
-        label="Phone Number"
-        type="tel"
-        name="phone"
-        value={formData.phone}
-        onChange={handleInputChange}
-        error={errors.phone}
-        required
-      />
-
-      {/* 🟢 Provider Fields */}
-      {formData.role === "provider" && (
-        <>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Basic Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
-            label="Business Name"
-            name="businessName"
-            value={formData.businessName}
+            label="First Name"
+            name="firstName"
+            value={formData.firstName}
             onChange={handleInputChange}
-            error={errors.businessName}
+            error={errors.firstName}
+            required
           />
-
-          <Select
-            label="Service Categories"
-            multiple
-            options={serviceOptions}
-            value={formData.serviceCategories}
-            onChange={(value) => handleSelectChange("serviceCategories", value)}
-            error={errors.serviceCategories}
+          <Input
+            label="Last Name"
+            name="lastName"
+            value={formData.lastName}
+            onChange={handleInputChange}
+            error={errors.lastName}
+            required
           />
+        </div>
 
-          <Select
-            label="Experience Level"
-            options={experienceOptions}
-            value={formData.experience}
-            onChange={(value) => handleSelectChange("experience", value)}
-            error={errors.experience}
-          />
-        </>
-      )}
-
-      <Input
-        label="Address"
-        name="address"
-        value={formData.address}
-        onChange={handleInputChange}
-        error={errors.address}
-        required
-      />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
-          label="Password"
-          type="password"
-          name="password"
-          value={formData.password}
+          label="Email Address"
+          type="email"
+          name="email"
+          value={formData.email}
           onChange={handleInputChange}
-          error={errors.password}
+          error={errors.email}
           required
         />
+
         <Input
-          label="Confirm Password"
-          type="password"
-          name="confirmPassword"
-          value={formData.confirmPassword}
+          label="Phone Number"
+          type="tel"
+          name="phone"
+          value={formData.phone}
           onChange={handleInputChange}
-          error={errors.confirmPassword}
+          error={errors.phone}
           required
         />
-      </div>
 
-      <Checkbox
-        label="I agree to the Terms of Service and Privacy Policy"
-        name="agreeToTerms"
-        checked={formData.agreeToTerms}
-        onChange={handleInputChange}
-        error={errors.agreeToTerms}
-        required
-      />
+        {/* Provider Fields */}
+        {formData.role === "provider" && (
+          <>
+            <Input
+              label="Business Name"
+              name="businessName"
+              value={formData.businessName}
+              onChange={handleInputChange}
+              error={errors.businessName}
+            />
 
-      <Button
-        type="submit"
-        variant="default"
-        size="lg"
-        fullWidth
-        loading={isLoading}
-        iconName="UserPlus"
-        iconPosition="left"
-      >
-        Create Account
-      </Button>
-    </form>
+            <Select
+              label="Service Categories"
+              multiple
+              options={serviceOptions}
+              value={formData.serviceCategories}
+              onChange={(value) => handleSelectChange("serviceCategories", value)}
+              error={errors.serviceCategories}
+            />
+
+            <Select
+              label="Experience Level"
+              options={experienceOptions}
+              value={formData.experience}
+              onChange={(value) => handleSelectChange("experience", value)}
+              error={errors.experience}
+            />
+          </>
+        )}
+
+        <Input
+          label="Address"
+          name="address"
+          value={formData.address}
+          onChange={handleInputChange}
+          error={errors.address}
+          required
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="Password"
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleInputChange}
+            error={errors.password}
+            required
+          />
+          <Input
+            label="Confirm Password"
+            type="password"
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleInputChange}
+            error={errors.confirmPassword}
+            required
+          />
+        </div>
+
+        <Checkbox
+          label="I agree to the Terms of Service and Privacy Policy"
+          name="agreeToTerms"
+          checked={formData.agreeToTerms}
+          onChange={handleInputChange}
+          error={errors.agreeToTerms}
+          required
+        />
+
+        <Button
+          type="submit"
+          variant="default"
+          size="lg"
+          fullWidth
+          loading={isLoading}
+          iconName="UserPlus"
+          iconPosition="left"
+        >
+          Create Account
+        </Button>
+      </form>
+    </>
   );
 };
 
