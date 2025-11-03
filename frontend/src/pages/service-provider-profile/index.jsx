@@ -10,12 +10,13 @@ import ContactInfo from './components/ContactInfo';
 import PortfolioGallery from './components/PortfolioGallery';
 import CertificationsInsurance from './components/CertificationsInsurance';
 import BookingModal from './components/BookingModal';
+import { useAuth } from '../../contexts/AuthContext';
 
 const ServiceProviderProfile = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const [user] = useState(null); // Mock user state
 
   // Mock provider data
   const providerData = {
@@ -246,7 +247,7 @@ const ServiceProviderProfile = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header user={user} />
+      <Header />
       <main className="pt-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Back Navigation */}

@@ -9,21 +9,15 @@ import LoadingState from './components/LoadingState';
 import BookingModal from './components/BookingModal';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
+import { useAuth } from '../../contexts/AuthContext';
 
 const CustomerDashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
-
-  // Mock user data
-  const [user] = useState({
-    id: 1,
-    name: "Sarah Johnson",
-    email: "sarah.johnson@email.com",
-    role: "customer"
-  });
 
   // Filter and sort states
   const [filters, setFilters] = useState({
@@ -266,15 +260,12 @@ const CustomerDashboard = () => {
     }, 3000);
   };
 
-  const handleLogout = () => {
-    navigate('/landing-page');
-  };
 
   const hasActiveFilters = filters?.category || filters?.rating || filters?.priceRange || filters?.search;
 
   return (
     <div className="min-h-screen bg-background">
-      <Header user={user} onLogout={handleLogout} />
+      <Header />
       <main className="pt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Page Header */}

@@ -4,6 +4,8 @@ import { ChevronDown, Check, Search, X } from "lucide-react";
 import { cn } from "../../utils/cn";
 import Button from "./Button";
 import Input from "./Input";
+import { User, Mail, Lock } from "lucide-react";
+
 
 const Select = React.forwardRef(({
     className,

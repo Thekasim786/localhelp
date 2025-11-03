@@ -6,28 +6,25 @@ import AuthToggle from './components/AuthToggle';
 import RoleToggle from './components/RoleToggle';
 import LoginForm from './components/LoginForm';
 import SignupForm from './components/SignupForm';
+import { useAuth } from '../../contexts/AuthContext';
 
 const LoginSignup = () => {
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [userRole, setUserRole] = useState('customer');
-  const [user, setUser] = useState(null);
 
   useEffect(() => {
     // Check if user is already logged in
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      const userData = JSON.parse(storedUser);
-      setUser(userData);
-      
+    if (isAuthenticated()) {
       // Redirect to appropriate dashboard
-      if (userData?.role === 'customer') {
+      if (user?.role === 'customer') {
         navigate('/customer-dashboard');
       } else {
         navigate('/service-provider-profile');
       }
     }
-  }, [navigate]);
+  }, [navigate, user, isAuthenticated]);
 
   const handleAuthToggle = (loginMode) => {
     setIsLogin(loginMode);
@@ -37,14 +34,10 @@ const LoginSignup = () => {
     setUserRole(role);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-  };
 
   return (
     <div className="min-h-screen bg-background">
-      <Header user={user} onLogout={handleLogout} />
+      <Header />
       
       <main className="pt-16 min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">

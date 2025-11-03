@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import { Checkbox } from '../../../components/ui/Checkbox';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const LoginForm = ({ userRole }) => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -14,88 +16,103 @@ const LoginForm = ({ userRole }) => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mock credentials for different user types
-  const mockCredentials = {
-    customer: {
-      email: "customer@nukkadhelp.com",
-      password: "customer123"
-    },
-    provider: {
-      email: "provider@nukkadhelp.com", 
-      password: "provider123"
-    }
-  };
-
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e?.target;
-    setFormData(prev => ({
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
     }));
-    
+
     // Clear error when user starts typing
-    if (errors?.[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
-    
-    if (!formData?.email) {
+
+    if (!formData.email) {
       newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/?.test(formData?.email)) {
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
-    
-    if (!formData?.password) {
+
+    if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData?.password?.length < 6) {
+    } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
-    
+
     return newErrors;
   };
 
   const handleSubmit = async (e) => {
-    e?.preventDefault();
-    
+    e.preventDefault();
+
     const newErrors = validateForm();
-    if (Object.keys(newErrors)?.length > 0) {
+    if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      const credentials = mockCredentials?.[userRole];
-      
-      if (formData?.email === credentials?.email && formData?.password === credentials?.password) {
-        // Successful login
-        const userData = {
-          id: userRole === 'customer' ? 1 : 2,
-          email: formData?.email,
-          name: userRole === 'customer' ? 'John Customer' : 'Mike Provider',
-          role: userRole
-        };
-        
-        localStorage.setItem('user', JSON.stringify(userData));
-        
-        if (userRole === 'customer') {
-          navigate('/customer-dashboard');
-        } else {
-          navigate('/service-provider-profile');
-        }
-      } else {
+    setErrors({});
+
+    try {
+      // Select correct endpoint
+      const apiUrl =
+        userRole === 'provider'
+          ? 'http://localhost:3000/api/auth/provider-login'
+          : 'http://localhost:3000/api/auth/customer-login';
+
+      // Make POST request
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
         setErrors({
-          general: `Invalid credentials. Use ${credentials?.email} / ${credentials?.password}`
+          general: data.message || 'Invalid credentials, please try again.',
         });
+        setIsLoading(false);
+        return;
       }
-      
+
+      // Save user info or token
+      localStorage.setItem('user', JSON.stringify(data.user || data));
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+
+      // Update auth context
+      login({
+        email: data.user?.email || formData.email,
+        name: data.user?.name || 'User',
+        role: userRole,
+      });
+
+      // Redirect based on role
+      if (userRole === 'customer') {
+        navigate('/customer-dashboard');
+      } else {
+        navigate('/service-provider-profile');
+      }
+    } catch (err) {
+      console.error('❌ Login error:', err);
+      setErrors({ general: 'Something went wrong. Please try again later.' });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleForgotPassword = () => {
@@ -104,39 +121,42 @@ const LoginForm = ({ userRole }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {errors?.general && (
+      {errors.general && (
         <div className="p-3 bg-error/10 border border-error/20 rounded-md">
-          <p className="text-sm text-error">{errors?.general}</p>
+          <p className="text-sm text-error">{errors.general}</p>
         </div>
       )}
+
       <Input
         label="Email Address"
         type="email"
         name="email"
         placeholder="Enter your email"
-        value={formData?.email}
+        value={formData.email}
         onChange={handleInputChange}
-        error={errors?.email}
+        error={errors.email}
         required
       />
+
       <Input
         label="Password"
         type="password"
         name="password"
         placeholder="Enter your password"
-        value={formData?.password}
+        value={formData.password}
         onChange={handleInputChange}
-        error={errors?.password}
+        error={errors.password}
         required
       />
+
       <div className="flex items-center justify-between">
         <Checkbox
           label="Remember me"
           name="rememberMe"
-          checked={formData?.rememberMe}
+          checked={formData.rememberMe}
           onChange={handleInputChange}
         />
-        
+
         <button
           type="button"
           onClick={handleForgotPassword}
@@ -145,6 +165,7 @@ const LoginForm = ({ userRole }) => {
           Forgot password?
         </button>
       </div>
+
       <Button
         type="submit"
         variant="default"
@@ -156,12 +177,6 @@ const LoginForm = ({ userRole }) => {
       >
         Sign In
       </Button>
-      <div className="mt-4 p-3 bg-muted/50 rounded-md">
-        <p className="text-xs text-muted-foreground mb-2">Demo Credentials:</p>
-        <p className="text-xs text-foreground">
-          <strong>{userRole === 'customer' ? 'Customer' : 'Provider'}:</strong> {mockCredentials?.[userRole]?.email} / {mockCredentials?.[userRole]?.password}
-        </p>
-      </div>
     </form>
   );
 };

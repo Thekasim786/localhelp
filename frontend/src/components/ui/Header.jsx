@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Icon from '../AppIcon';
 import Button from './Button';
+import { useAuth } from '../../contexts/AuthContext';
 
-const Header = ({ user = null, onLogout = () => {} }) => {
+const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const navigationItems = [
     { label: 'Home', path: '/landing-page', authRequired: false },
@@ -28,9 +30,8 @@ const Header = ({ user = null, onLogout = () => {} }) => {
   };
 
   const handleLogout = () => {
-    onLogout();
+    logout();
     setIsMobileMenuOpen(false);
-    navigate('/landing-page');
   };
 
   const toggleMobileMenu = () => {
